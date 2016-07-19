@@ -1,0 +1,644 @@
+import java.io.*;
+import java.*;	
+import java.util.*;
+public class Dtree {
+	public static String LINE_SEPERATOR = System.getProperty("line.separator");
+	public static String SPACE = "[ ]{1,}";
+	public static int rowcount=0,colcount=0;
+	public static int rowcount2=0,colcount2=0;
+	public static String Mode="Null";
+	/**
+	 * Main method. Reads give file and populates the array. Later prints it
+	 * onto the console in a matrix format
+	 * 
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		if( args.length !=3 ) 
+	    {
+	      System.out.println(" number of arguments should be 3");
+	      System.exit(0);
+	     }
+		
+		/*if( args[2] !="optimized"||args[2] !="randomized"||args[2] !="forest3"||args[2] !="forest15" ) 
+	    {
+	      System.out.println(" OPTION should be: optimized, randomized, forest3 or forest15.");
+	      System.exit(0);
+	     }*/
+		else{
+		/*String dataFile = "C:\\Users\\Rajiv R\\Desktop\\Assignments\\artificial intelligence\\prog assignment 6\\pendigits_training.txt"; 
+		String dataFile2 = "C:\\Users\\Rajiv R\\Desktop\\Assignments\\artificial intelligence\\prog assignment 6\\pendigits_test.txt";*/ 
+		String dataFile = args[0];
+		String dataFile2 = args[1];
+		Mode = args[2];
+		double[][] nodeTraining;
+		double[][] node = null;
+		if(dataFile.matches("(?i).*training.*"))
+		{
+		try {
+			double[][] outputArray = getArrayFromFile(dataFile);
+			//int rowcount=0,colcount=0,i,j;
+			int i,j;
+			// Prints the array -- this is the array from input file
+			for ( i = 0; i < outputArray.length; i++) {
+				for ( j = 0; j < outputArray[0].length; j++) {
+					//System.out.print(outputArray[i][j] + " "); // uncomment to print
+					
+				}
+				rowcount++; colcount=j;
+				//System.out.println(); // uncomment to print
+			}
+		//to print number of rows & columns	
+			//System.out.println(outputArray[5][0]);
+			System.out.println("rows="+rowcount+" "+"columns="+colcount+
+					" from training file");
+			
+			// splitting input array to examples
+			
+			double[][] example = new double[rowcount][colcount-1]; 
+			for (int k=0;k<outputArray.length; k++){
+				for ( int l = 0; l < outputArray[0].length-1; l++) {
+					example[k][l]= outputArray[k][l];
+				}	
+			} // end of both for loops
+			// printing the array example 
+			//PrintArray(example);
+			
+			// creating a class array which contains last column of the input
+			double[] outputClass = new double[rowcount]; 
+			for(int row = 0; row < rowcount; row++)
+			{
+				outputClass[row] = outputArray[row][colcount-1];
+			}
+			//PrintArray1D(outputClass);
+			//System.out.println(outputClass.length+" class\n");
+			// Creating the Attribute array
+			int[] attribute = new int[colcount-1];
+			for(int z=0; z<colcount-1; z++)
+				attribute[z]= z;
+			//PrintArray1Dint(attribute);
+			
+			// calling the DTL function -- initially putting 0 in default
+			int def=0;
+			node = new double[3][attribute.length];
+			nodeTraining = new double[3][attribute.length];
+			int treeid=0;
+		if (Mode.contains("optimized")||Mode.contains("randomized")){
+			node = DTL(outputArray,example,attribute,outputClass,def);
+			//node = DTLrandom(outputArray,example,attribute,outputClass,def);
+			nodeTraining=node;
+			//PrintArray(node); // prints attribute -- infogain -- threshold 
+			OutpputTraining(node,Mode,treeid); // this function gives training data (imp)!!!!
+		}//end mode if
+		
+		else if (Mode.contains("forest3")){
+			node = DTL(outputArray,example,attribute,outputClass,def);
+			//node = DTLrandom(outputArray,example,attribute,outputClass,def);
+			nodeTraining=node;
+			//PrintArray(node); // prints attribute -- infogain -- threshold 
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+		}
+		
+		else if (Mode.contains("forest15")){
+			node = DTL(outputArray,example,attribute,outputClass,def);
+			//node = DTLrandom(outputArray,example,attribute,outputClass,def);
+			nodeTraining=node;
+			//PrintArray(node); // prints attribute -- infogain -- threshold 
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+			OutpputTraining(node,Mode,treeid);
+			treeid++;
+		}
+		
+		
+		}//end of try 
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		}// end of if
+		//****************************************************************************
+		double[][] node3= node;
+		
+		//System.out.println("NOde 3 --");
+		//PrintArray(node3);
+		if(dataFile2.matches("(?i).*test.*"))
+		{
+			try {
+				double[][] outputArray2 = getArrayFromFile(dataFile2);
+				//int rowcount2=0,colcount2=0,i,j;
+				int i2,j2;
+				// Prints the array -- this is the array from input file
+				for ( i2= 0; i2 < outputArray2.length; i2++) {
+					for ( j2 = 0; j2 < outputArray2[0].length; j2++) {
+						//System.out.print(outputArray[i2][j2] + " "); // uncomment to print
+						
+					}
+					rowcount2++; colcount2=j2;
+					//System.out.println(); // uncomment to print
+				}
+			//to print number of rows & columns	
+				//System.out.println(outputArray2[5][0]);
+				System.out.println("rows="+rowcount2+" "+"columns="+colcount2+
+						" from test file");
+				
+				// splitting input array to examples
+				
+				double[][] example2 = new double[rowcount2][colcount2-1]; 
+				for (int k2=0;k2<outputArray2.length; k2++){
+					for ( int l2 = 0; l2 < outputArray2[0].length-1; l2++) {
+						example2[k2][l2]= outputArray2[k2][l2];
+					}	
+				} // end of both for loops
+				// printing the array example 
+				//PrintArray(example2);
+				
+				// creating a class array which contains last column of the input
+				double[] outputClass2 = new double[rowcount2]; 
+				for(int row2 = 0; row2 < rowcount2; row2++)
+				{
+					outputClass2[row2] = outputArray2[row2][colcount2-1];
+				}
+				//PrintArray1D(outputClass2);
+				//System.out.println(outputClass2.length+" class\n");
+				// Creating the Attribute array
+				int[] attribute2 = new int[colcount2-1];
+				for(int z2=0; z2<colcount2-1; z2++)
+					attribute2[z2]= z2;
+				//PrintArray1Dint(attribute2);
+				
+				// calling the DTL function -- initially putting 0 in default
+				int def2=0;
+				double[][] node2 = new double[3][attribute2.length];
+				if (Mode.contains("optimized")||Mode.contains("randomized")){
+				node2 = DTL2(outputArray2,example2,attribute2,outputClass2,def2);
+				//System.out.println(" second file\n");
+				//PrintArray(node2); // prints attribute -- infogain -- threshold 
+				//OutpputTraining(node2); // this function gives training data
+				outputtest(node3,node2);}// end of mode if
+				else if (Mode.contains("forest3")){
+					node2 = DTL2(outputArray2,example2,attribute2,outputClass2,def2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+				}
+				else if (Mode.contains("forest15")){
+					node2 = DTL2(outputArray2,example2,attribute2,outputClass2,def2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+					outputtest(node3,node2);
+				}
+				
+			}//end of try 
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		}// end of if 2
+		}
+		}//end of main()
+		
+		
+
+	private static void outputtest(double[][] nodeTraining2, double[][] node2) {
+		System.out.println("+++test+++++++++++++++++++++++++++++++++++++++");
+		//nodeTraining2[3][1]=nodeTraining2[0][1]+(20/100)*nodeTraining2[3][1];
+		int count=0;
+		double classification_accuracy = 0;
+		for(int i=0;i<node2.length;i++){
+			int accuracy;
+			if(node2[i][0]==nodeTraining2[i][0]) 
+				{accuracy =1; count++;} 
+			else accuracy=0;
+		System.out.println("Id="+(int)node2[i][0]+" predicted="+(int)nodeTraining2[i][0]+" True="+(int)node2[i][0]+" Accuracy="+accuracy);	
+		}
+		//System.out.println("=count=="+count);
+		 classification_accuracy = ((double)count/(double)node2.length)*100;
+		System.out.println("\n Classification Accuracy= "+classification_accuracy);
+		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++");
+	}
+
+
+
+	private static void OutpputTraining(double[][] node, String mode2, int treeid2) {
+		
+		//System.out.println(node.length);
+System.out.println("************************Training**********************************************");
+		for (int i=0;i<node.length;i++){			
+System.out.println("Tree="+treeid2+" attribute="+(int)node[i][0]+" gain="+node[i][1]+" thr="+node[i][2]);				
+			
+		}
+		System.out.println("******************************************************************************");		
+	}
+	private static double[][] DTL2(double[][] outputArray, double[][] example,
+			int[] attribute, double[] outputClass, int def) {
+		double[][] best = new double[3][attribute.length];
+		best  = choose_attribute2(outputArray,example,attribute,outputClass,def);
+		//Tree(best);
+		//PrintArray(best);
+		best = trasposeMatrix(best);
+		//PrintArray(best);
+		//System.out.println("after\n");
+		Tree2(best);// PrintArray(best);
+		return best;
+		}
+	
+	
+	private static double[][] DTL(double[][] outputArray, double[][] example,
+			int[] attribute, double[] outputClass, int def) {
+		double[][] best = new double[3][attribute.length];
+		best  = choose_attribute(outputArray,example,attribute,outputClass,def);
+		//Tree(best);
+		//PrintArray(best);
+		best = trasposeMatrix(best);
+		//PrintArray(best);
+		//System.out.println("after\n");
+		//System.out.println("   this  "+best[14][1]);
+		if(Mode.contains("randomized"))
+		best[2][1]=1.1*(double)best[2][1];
+		//System.out.println("   this after "+best[14][1]);
+		//PrintArray(best);
+		Tree(best);// PrintArray(best);
+		return best;
+	}
+	
+	private static double[][] DTLrandom(double[][] outputArray, double[][] example,
+			int[] attribute, double[] outputClass, int def) {
+		double[][] best = new double[3][attribute.length];
+		best  = choose_attribute(outputArray,example,attribute,outputClass,def);
+		//Tree(best);
+		//PrintArray(best);
+		best = trasposeMatrix(best);
+		//PrintArray(best);
+		/*double temp=0,temp1=0,temp2=0;
+		
+		best[0][0]=temp; best[0][1]=temp1; best[0][2]=temp2;
+		best[0][0]=best[1][0]; best[0][1]=best[1][1]; best[0][2]=best[1][2];
+		temp=best[1][0]; temp1=best[1][1];temp2=best[1][2];*/
+		//System.out.println("after\n");
+		Tree(best);// PrintArray(best);
+		return best;
+	}
+	
+	private static double[][] DTLrandom2(double[][] outputArray, double[][] example,
+			int[] attribute, double[] outputClass, int def) {
+		double[][] best = new double[3][attribute.length];
+		best  = choose_attribute2(outputArray,example,attribute,outputClass,def);
+		//Tree(best);
+		//PrintArray(best);
+		best = trasposeMatrix(best);
+		//PrintArray(best);
+		//System.out.println("after\n");
+		Tree(best);// PrintArray(best);
+		return best;
+		}
+	
+	
+	public static double[][] trasposeMatrix(double[][] matrix)
+	{
+	    int m = matrix.length;
+	    int n = matrix[0].length;
+
+	    double[][] trasposedMatrix = new double[n][m];
+
+	    for(int x = 0; x < n; x++)
+	    {
+	        for(int y = 0; y < m; y++)
+	        {
+	            trasposedMatrix[x][y] = matrix[y][x];
+	        }
+	    }
+
+	    return trasposedMatrix;
+	}
+
+	private static void Tree2(double[][] best) {
+		Arrays.sort(best, new Comparator<double[]>() {
+		    @Override
+		    public int compare(double[] o1, double[] o2) {
+		        return Double.compare(o1[1], o2[1]);
+		    }
+		});
+		
+	}
+	private static void Tree(double[][] best) {
+
+	//best[6][1]=(20/100)*best[6][1];	
+		Arrays.sort(best, new Comparator<double[]>() {
+		    @Override
+		    public int compare(double[] o1, double[] o2) {
+		        return Double.compare(o1[1], o2[1]);
+		    }
+		});
+		
+	}
+
+	
+	private static double[][] choose_attribute2(double[][] outputArray,
+			double[][] example, int[] attribute, double[] outputClass, int def) {
+		int max_gain=-1,best_att=-1; double best_th=-1;
+		double gain=0;  
+		int length_of_att=attribute.length;
+		double[] attribute_val= new double[length_of_att];
+		double[] gain_array= new double[length_of_att];
+		double[] threshold_array= new double[length_of_att];
+		double[][] Final = new double[3][length_of_att];
+		//**********************looping over all the attributes --  for now first attribute
+			for(int i=0;i<attribute.length;i++)
+			{
+		attribute_val=select_column2(example,attribute[i]);
+			//System.out.println("\n");
+			//PrintArray1D(attribute_val);
+			//System.out.println(attribute_val.length +"attribute");
+			double L = min(attribute_val); 
+			double M = max(attribute_val);
+			// in the end replace al contents of attribute_val to 0 and run the loop again if each attribute value is 0
+		//System.out.println("\n min attribute in row"+ L + " max value"+ M);
+			// to code info gain!!!!!!!!!!!!!!!!!!
+			int k=i; if(k==0) k=1; else k=i+1;
+			best_th = L+((double)k*(M-L))/51;
+			gain = information_gain(attribute_val,outputClass);
+			//System.out.println("for attribute="+attribute[i]+" "+"gain="+gain);
+			gain_array[i]=gain;
+			threshold_array[i]=best_th;
+			}
+			//PrintArray1D(threshold_array);
+			for(int l=0;l<3;l++){
+				for(int m=0;m<length_of_att;m++){
+					if(l==0)
+					Final[l][m]=attribute[m];
+					else if (l==1)
+						Final[l][m]=gain_array[m];
+					else if (l==2)
+						Final[l][m]=threshold_array[m];
+				}
+			}
+			//PrintArray(Final);
+			
+		return Final;
+	}
+	
+	
+	private static double[][] choose_attribute(double[][] outputArray,
+			double[][] example, int[] attribute, double[] outputClass, int def) {
+		int max_gain=-1,best_att=-1; double best_th=-1;
+		double gain=0;  
+		int length_of_att=attribute.length;
+		double[] attribute_val= new double[length_of_att];
+		double[] gain_array= new double[length_of_att];
+		double[] threshold_array= new double[length_of_att];
+		double[][] Final = new double[3][length_of_att];
+		//**********************looping over all the attributes --  for now first attribute
+			for(int i=0;i<attribute.length;i++)
+			{
+		attribute_val=select_column(example,attribute[i]);
+			//System.out.println("\n");
+			//PrintArray1D(attribute_val);
+			//System.out.println(attribute_val.length +"attribute");
+			double L = min(attribute_val); 
+			double M = max(attribute_val);
+			// in the end replace al contents of attribute_val to 0 and run the loop again if each attribute value is 0
+		//System.out.println("\n min attribute in row"+ L + " max value"+ M);
+			// to code info gain!!!!!!!!!!!!!!!!!!
+			int k=i; if(k==0) k=1; else k=i+1;
+			best_th = L+((double)k*(M-L))/51;
+			gain = information_gain(attribute_val,outputClass);
+			//System.out.println("for attribute="+attribute[i]+" "+"gain="+gain);
+			gain_array[i]=gain;
+			threshold_array[i]=best_th;
+			}
+			//PrintArray1D(threshold_array);
+			for(int l=0;l<3;l++){
+				for(int m=0;m<length_of_att;m++){
+					if(l==0)
+					Final[l][m]=attribute[m];
+					else if (l==1)
+						Final[l][m]=gain_array[m];
+					else if (l==2)
+						Final[l][m]=threshold_array[m];
+				}
+			}
+			//PrintArray(Final);
+			
+		return Final;
+	}
+
+	private static double information_gain(double[] attribute_val,
+			double[] outputClass) {
+		// ***********step1 : getting entropy of root
+		//Map<Integer, Integer> map2 = new HashMap<Integer, Integer>();
+		double root_entropy,root_entropy2;
+		root_entropy2 = findRootEntropy(outputClass);
+		root_entropy = findRootEntropy(attribute_val); //this map contains occurence of all the values
+		 //System.out.println("root_entropy="+root_entropy);
+		return (root_entropy-root_entropy2);
+	}
+	
+	private static double findRootEntropy(double[] outputClass) {
+		//first finding the occurances in the outputClass
+				Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+				double root_entropy=0;double ratio=0; double gain=0;
+		        for (int i = 0; i < outputClass.length; i++) {
+		            int key = (int)outputClass[i];
+		            if (map.containsKey(key)) {
+		                int occurrence = map.get(key);
+		                occurrence++;
+		                map.put(key, occurrence);
+		            } else {
+		                map.put(key, 1);
+		            }
+		        }
+		        int[] occurenceArray = new int[outputClass.length];
+		        int totalOcc = 0;
+		        Iterator iterator = map.keySet().iterator();
+		        for (int i=0;iterator.hasNext();i++){
+		        //while (iterator.hasNext()) {
+		        	int key = (Integer) iterator.next();
+		            int occurrence = map.get(key);
+		            occurenceArray[i]=occurrence;
+		        	totalOcc += occurrence;
+		        	//System.out.println(key + " occur " + occurrence + " time(s).");
+				}
+		        //System.out.println("Total Occurence: "+totalOcc);
+		        /*for(int j=0;j<occurenceArray.length;j++)
+		        	System.out.println(occurenceArray[j]);*/
+		        // getting entropy of root
+		        for(int j=0;j<occurenceArray.length;j++) {
+		        		ratio += (double)occurenceArray[j]/(double)totalOcc;
+		        	root_entropy=root_entropy-(ratio*log2(ratio));
+		        	
+		        }
+		        	gain=root_entropy-ratio;
+		        //System.out.println("root_entropy="+root_entropy);
+		       // System.out.println("gain="+gain);
+		        
+		        
+		        
+		return root_entropy;
+	}
+
+	private static double log2(double ratio) {
+		return Math.log( ratio ) / Math.log( 2 );
+	}
+
+	private static double max(double[] attribute_val) {
+		double maxvalue=attribute_val[0];
+		for(int i=1;i<attribute_val.length;i++){
+			if(attribute_val[i]>maxvalue) maxvalue =attribute_val[i];
+		}
+		return maxvalue;
+	}
+
+	// method finds the minimum value in an array
+	private static double min(double[] attribute_val) {
+		double minvalue=attribute_val[0];
+		for(int i=1;i<attribute_val.length;i++){
+			if(attribute_val[i]<minvalue) minvalue =attribute_val[i];
+		}
+		return minvalue;
+	}
+
+	private static double[] select_column2(double[][] example, int i) {
+		double[] att= new double[rowcount2];
+		for(int row = 0;row<rowcount2;row++)
+		{
+	att[row]=example[row][i];
+		}
+		return att;
+	}
+	private static double[] select_column(double[][] example, int i) {
+		double[] att= new double[rowcount];
+		for(int row = 0;row<rowcount;row++)
+		{
+	att[row]=example[row][i];
+		}
+		return att;
+	}
+
+	// prints 1D double array
+	private static void PrintArray1D(double[] outputClass) {
+		for(int i=0;i<outputClass.length;i++)
+			System.out.print(outputClass[i]+" ");
+	
+		
+	}
+	
+	// prints 1D int array
+	private static void PrintArray1Dint(int[] outputClass) {
+		for(int i=0;i<outputClass.length;i++)
+			System.out.print(outputClass[i]+" ");
+		
+	}
+
+
+	// this method prints a 2D array
+	private static void PrintArray(double[][] example) {
+		// 
+		for ( int i = 0; i < example.length; i++) {
+			for ( int j = 0; j < example[0].length; j++) {
+				System.out.print(example[i][j] + " "); // uncomment to print
+				
+			}
+			
+		System.out.println(); // uncomment to print
+		}
+	}
+
+	/**
+	 * Using the file contents in string format generates the array
+	 * 
+	 * @param dataFile
+	 * @return
+	 * @throws IOException
+	 */
+	public static double[][] getArrayFromFile(String dataFile) throws IOException {
+		// gets file contents from readDataFromFile method
+		String fileContents = readDataFromFile(dataFile);
+		// Splits the String by each line. This will give an array of rows
+		String[] rows = fileContents.split(LINE_SEPERATOR);
+		// Row length is saved to give it to the output array
+		int rowLength = rows.length;
+		// Assuming every row has equal number of columns.
+		// Randomly chose first row and split it with spaces in between.
+		// This gives number of columns
+		String[] columns = rows[0].trim().split(SPACE);
+		// Saving column length for the output array
+		int columnLength = columns.length;
+		// initialize the output array
+		double[][] outputArray = new double[rowLength][columnLength];
+		for (int i = 0; i < rowLength; i++) {// Looping over for rows
+			// For each row a temporary array is made by splitting columns
+			String temp[] = rows[i].trim().split(SPACE);
+			for (int j = 0; j < columnLength; j++) {// Looping over for columns
+				// Each element in the temporary array is the value. Using
+				// parseInt method save it into int array.
+				outputArray[i][j] = Double.parseDouble(temp[j].trim());
+			}
+		}
+		// return the output
+		return outputArray;
+	}
+	/**
+	 * Just reads file and transforms the whole file into a String
+	 * 
+	 * @param dataFile
+	 * @return file contents as String
+	 * @throws IOException
+	 */
+	public static String readDataFromFile(String dataFile) throws IOException {
+		BufferedReader br = null;
+		String line = null;
+		StringBuilder fileContents = new StringBuilder();
+		try {
+			br = new BufferedReader(new FileReader(dataFile));
+			while ((line = br.readLine()) != null) {
+				fileContents.append(line);
+				fileContents.append(LINE_SEPERATOR);
+			}
+		} finally {
+			br.close();
+		}
+		return fileContents.toString();
+	}
+}
+

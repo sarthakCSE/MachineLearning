@@ -1,0 +1,951 @@
+import java.util.*;
+import java.io.*;
+
+
+class desicionTreeNode{
+	
+	double e;
+	double infoGain;
+	boolean marked;	
+	String targetAttribute;
+	desicionTreeNode leftSide;
+	desicionTreeNode rightSide;
+	int zerocount;
+	int onecount;
+	int value;
+	String classify;
+	HashMap<Integer,String> attributes;
+	HashSet<Integer> indexes;
+
+	desicionTreeNode(desicionTreeNode node){
+
+
+	this.e=node.e;
+	this.infoGain=node.infoGain;
+	this.marked=node.marked;	
+	this.targetAttribute=node.targetAttribute;
+	this.zerocount=node.zerocount;
+	this.onecount=node.onecount;
+	this.value=node.value;
+	this.classify=node.classify;
+	this.attributes=new HashMap<Integer,String>(node.attributes);
+	this.indexes=new HashSet<Integer>(node.indexes);
+
+	}
+
+	desicionTreeNode(){
+
+		value=-1;
+		e=0;
+		infoGain=0;
+		leftSide=null;
+		marked=false;
+
+		rightSide=null;
+		zerocount=0;
+		onecount=0;
+		classify="";
+		attributes=new HashMap<Integer,String>();
+		indexes=new HashSet<Integer>();
+		targetAttribute="";
+
+	}
+
+	void setmarked(boolean val)
+	{
+		marked=val;
+	}
+
+	boolean ismarked()
+	{
+		return marked;
+	}
+
+	void setIndexes(HashSet<Integer> index)
+	{
+		indexes=new HashSet<Integer>(index);
+	}
+
+	HashSet<Integer> getIndexes()
+	{
+		return indexes;
+	}
+
+	void getIndex()
+	{
+		Iterator itr=indexes.iterator();
+		System.out.println("Index Set size="+indexes.size());
+		while(itr.hasNext())
+		{
+			System.out.print((Integer)itr.next()+" ");
+		}
+	}
+
+	void setAttributes(HashMap<Integer,String> attributeNames)
+	{
+		attributes.putAll(attributeNames);
+	}
+
+	HashMap<Integer,String> getAttributes()
+	{
+		return attributes;
+	}
+
+	String getAttributeValue(int key)
+	{
+		return attributes.get(key);
+	}
+
+	boolean checkAttribute()
+	{
+		if((attributes.size()-1)>0)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	void setvalue(int val)
+	{
+		value=val;
+	}
+
+	int getvalue()
+	{
+		return value;
+	}
+
+	String getclassify()
+	{
+		return classify;
+	}
+
+	String getTargetAttribute()
+	{
+		return targetAttribute;
+	}
+
+
+	void setclassify(String attribute)
+	{
+		classify=attribute;
+	}
+
+	int getCounts(int value)
+	{
+		if(value==0)
+			return zerocount; 
+		else
+			return onecount;		
+	}
+
+	void removeAttribute(int attr)
+	{
+		attributes.remove(attr);
+	}
+
+
+	void showAttributes()
+	{
+		Iterator itr=attributes.entrySet().iterator();
+		System.out.println("No. of Attributes in this node:"+attributes.size());
+
+		while(itr.hasNext()){
+
+			Map.Entry pair=(Map.Entry)itr.next();
+			System.out.println(pair.getKey()+":"+pair.getValue());
+		}
+	}
+
+
+	void setTargetAttribute(String target)
+	{
+		targetAttribute=target;
+	}
+
+
+	void rootCount(HashMap<Integer,HashMap<String,Integer>> records){
+
+		zerocount=onecount=0;
+
+		Iterator itr=records.entrySet().iterator();
+
+		HashMap<String,Integer> innerMap;
+	
+		while(itr.hasNext()){
+
+			Map.Entry pair=(Map.Entry) itr.next();			
+
+			innerMap=new HashMap<String,Integer>();
+
+			int rowNo=(Integer)pair.getKey();
+
+			innerMap=(HashMap<String,Integer>)pair.getValue();
+
+			indexes.add(rowNo);
+		
+			if(innerMap.get(getTargetAttribute())==0){
+
+				zerocount++;
+			}
+			else{
+
+				onecount++;
+			}
+
+		}
+
+	}
+
+
+	void uniqueCounts(HashMap<Integer,HashMap<String,Integer>> records,String attr, int value){
+
+		zerocount=onecount=0;
+
+		Iterator itr=getIndexes().iterator();
+
+		HashSet<Integer> newSet=new HashSet<Integer>();
+
+		HashMap<String,Integer> tempHash;
+
+		while(itr.hasNext()){
+
+			int rowNo=(Integer)itr.next();
+
+			tempHash=new HashMap<String,Integer>(records.get(rowNo));
+
+
+			if(tempHash.get(attr)==value){
+
+				newSet.add(rowNo);
+
+				if(tempHash.get(getTargetAttribute())==0) {
+
+					zerocount++;
+				}
+				else{
+
+					onecount++;
+				}
+			
+			}
+
+		}
+
+		indexes.clear();
+		indexes=new HashSet<Integer>(newSet);
+	}
+
+	void calculateEntropy(){
+
+		int count=(zerocount+onecount);
+		
+		if(count==0){
+			e=0;
+		}
+		else{
+			double p1=(double)zerocount/count;
+			double p2=(double)onecount/count;
+			double e1=(p1*(log(p1,2))*-1);
+			double ent2=(p2*(log(p2,2))*-1);
+
+			e=(double)e1+ent2;
+		}
+	}
+
+
+	static double log(double x, int base){
+		if(x!=0)
+    		return (Math.log(x) / Math.log(base));
+    	else
+    		return 0;
+	}
+
+	void calculateGain(){
+
+		if(leftSide==null && rightSide==null){
+
+ 			infoGain=1.0;
+
+		}	
+		else{
+
+			double entropy1;
+			double entropy2;
+
+			leftSide.calculateEntropy();
+			entropy1=leftSide.getEntropy();
+
+			rightSide.calculateEntropy();
+			entropy2=rightSide.getEntropy();
+
+			int totalleftSide=leftSide.getCounts(0)+leftSide.getCounts(1);
+			int totalrightSide=rightSide.getCounts(0)+rightSide.getCounts(1);
+
+			calculateEntropy();
+
+			int total=zerocount+onecount;
+			double probleftSide=(double)totalleftSide/total;
+			double probrightSide=(double)totalrightSide/total;
+			double ent2= (double)probleftSide* entropy1;
+			double product2= (double)probrightSide* entropy2;
+			infoGain=(double)e-(ent2+product2);
+
+		}
+	}
+
+	desicionTreeNode getleftSideNode(){
+
+		return leftSide;
+	}
+
+	desicionTreeNode getrightSideNode(){
+
+		return rightSide;
+	}
+
+	void setleftSideNode(desicionTreeNode node){
+
+		leftSide=node;
+	}
+
+
+	void setrightSideNode(desicionTreeNode node){
+
+		rightSide=node;
+	}
+
+
+	void setEntropy(double value){
+
+		e=value;
+	}
+
+
+	void setInfoGain(double value){
+
+		infoGain=value;
+	}
+
+
+	double getInfoGain(){
+
+		return infoGain;
+	}
+	
+	double getEntropy(){
+
+		return e;
+	}
+}
+
+class decisionTree
+{
+
+	desicionTreeNode root;	
+	LinkedList<desicionTreeNode> nodeList;
+	int size;
+
+	decisionTree(){
+
+		root=null;
+		size=0;
+	}
+
+	decisionTree(decisionTree orig)
+	{
+		root=new desicionTreeNode(orig.getRoot());
+
+		root.setleftSideNode(null);
+		root.setrightSideNode(null);
+
+		nodeList=new LinkedList<desicionTreeNode>(orig.nodeList);
+
+		copydesicionTreeNodes(orig.getRoot(),root);
+	}
+
+	void copydesicionTreeNodes(desicionTreeNode origNode, desicionTreeNode currNode){
+
+		if(origNode==null || currNode==null){
+
+			return;
+		}
+
+		if(origNode.getleftSideNode()!=null){
+
+			desicionTreeNode newNode=new desicionTreeNode(origNode.getleftSideNode());	
+			currNode.setleftSideNode(newNode);
+		}
+
+
+		if(origNode.getrightSideNode()!=null){
+
+			desicionTreeNode newNode=new desicionTreeNode(origNode.getrightSideNode());	
+			currNode.setrightSideNode(newNode);
+		}
+
+		copydesicionTreeNodes(origNode.getleftSideNode(),currNode.getleftSideNode());
+
+		copydesicionTreeNodes(origNode.getrightSideNode(),currNode.getrightSideNode());
+		
+	}
+
+	decisionTree(mainInstance trainingSet){
+	
+	nodeList=new LinkedList<desicionTreeNode>();
+	root=null;
+	size=0;
+
+	root=new desicionTreeNode();
+	root.setAttributes(trainingSet.getAttributeNames());
+	HashMap<Integer,String> tempHash=root.getAttributes();	
+	root.setTargetAttribute(tempHash.get(tempHash.size()-1));
+	root.rootCount(trainingSet.getRecords());
+
+	root.calculateEntropy();
+
+	if(trainingSet.getSize()==root.getCounts(1))
+	{
+		root.setclassify("Root");
+		root.setvalue(1);
+		return;
+	}
+
+	if(trainingSet.getSize()==root.getCounts(0)){
+		root.setclassify("Root");
+		root.setvalue(0);
+		return;
+	}
+
+	if(root.checkAttribute())
+	{		
+		if(root.getCounts(0)>root.getCounts(1))
+		{
+			root.setclassify("Root");
+			root.setvalue(0);
+		}
+		else
+		{
+			root.setclassify("Root");
+			root.setvalue(1);
+		}
+		return;
+	}
+
+	root.setleftSideNode(null);
+	root.setrightSideNode(null);
+
+	buildTree(trainingSet,root);	
+	}
+	
+	void display(desicionTreeNode node,int level)
+	{
+		if(node==null)
+		{
+			return;
+		}
+
+		level++;
+
+		if(node.getleftSideNode()!=null){
+			
+			desicionTreeNode leftSide=node.getleftSideNode();
+
+			int i=0;
+
+			while(i<level){
+
+				System.out.print("| ");
+				i++;
+			}
+
+			if(leftSide.getvalue()==-1){
+				
+				System.out.println(node.getclassify()+" = 0 :");
+			}
+			else{
+
+				System.out.println(node.getclassify()+" = 0 : "+leftSide.getvalue());
+			}
+
+				display(leftSide,level);
+		}
+
+
+		if(node.getrightSideNode()!=null){
+			
+			desicionTreeNode rightSide=node.getrightSideNode();
+
+			int i=0;
+
+			while(i<level){
+
+				System.out.print("| ");
+				i++;
+			}
+
+			if(rightSide.getvalue()==-1){
+				
+				System.out.println(node.getclassify()+" = 1 :");
+			}
+			else{
+
+				System.out.println(node.getclassify()+" = 1 : "+rightSide.getvalue());
+			}
+		
+
+			display(rightSide,level);
+
+		}
+
+	}
+
+	void buildTree(mainInstance trainingSet, desicionTreeNode node){
+	
+		if(node==null){
+
+			return;
+		}
+
+		if(node.getCounts(0)==(node.getCounts(0)+node.getCounts(1))){
+
+				node.setvalue(0);
+				return;
+		}
+
+		if(node.getCounts(1)==(node.getCounts(0)+node.getCounts(1))){
+
+			node.setvalue(1);
+			return;
+		}
+
+		if(node.checkAttribute()){
+			
+			if(node.getCounts(0)>node.getCounts(1)){
+
+				node.setvalue(0);
+
+			}
+			else{
+
+				node.setvalue(1);	
+			}
+			
+			return;
+		}
+		
+
+		int attributeValue=bestAttribute(trainingSet,node);
+		node.setclassify(node.getAttributeValue(attributeValue));
+		node.calculateEntropy();
+		HashMap<Integer,String> tempHashNode=new HashMap<Integer,String>();
+		tempHashNode.putAll(node.getAttributes());		
+		desicionTreeNode leftSide=new desicionTreeNode();
+		leftSide.setAttributes(tempHashNode);	
+		leftSide.setTargetAttribute(node.getTargetAttribute());
+		leftSide.setIndexes(node.getIndexes());
+		leftSide.uniqueCounts(trainingSet.getRecords(), leftSide.getAttributeValue(attributeValue), 0);
+		leftSide.calculateEntropy();
+		leftSide.removeAttribute(attributeValue);		
+		desicionTreeNode rightSide=new desicionTreeNode();
+		rightSide.setAttributes(tempHashNode);
+		rightSide.setTargetAttribute(node.getTargetAttribute());
+		rightSide.setIndexes(node.getIndexes());
+		rightSide.uniqueCounts(trainingSet.getRecords(), rightSide.getAttributeValue(attributeValue), 1);
+		rightSide.calculateEntropy();
+		rightSide.removeAttribute(attributeValue);
+		if(leftSide.getIndexes().size()>0)
+		{	
+			node.setleftSideNode(leftSide);
+			buildTree(trainingSet,leftSide);	
+		}		
+		
+		if(rightSide.getIndexes().size()>0)
+		{	
+			node.setrightSideNode(rightSide);
+			buildTree(trainingSet,rightSide);	
+		}
+	}
+	int bestAttribute(mainInstance instance, desicionTreeNode node)
+	{
+		double max=Double.NEGATIVE_INFINITY;
+		int maxGain=-1, key=-1;
+		String temp="";
+		Iterator itr=sortByValues(node.getAttributes()).entrySet().iterator();
+		while(itr.hasNext())
+		{
+			Map.Entry pair=(Map.Entry)itr.next();
+			key=(Integer)pair.getKey();
+			String value=(String)pair.getValue();
+			if(node.getTargetAttribute()!=value){
+				double k=buildAndCalculateIG(instance,value,node);
+				if(k>max)
+				{
+					max=k;
+					maxGain=key;
+					temp=value;
+				}
+			}
+		}
+
+	node.setleftSideNode(null);
+	node.setrightSideNode(null);
+	node.setInfoGain(max);
+
+	return maxGain;
+} 
+
+	double buildAndCalculateIG(mainInstance instance, String attributeValue,desicionTreeNode node)
+	{
+		desicionTreeNode leftSide=new desicionTreeNode();
+		leftSide.setTargetAttribute(node.getTargetAttribute());
+		leftSide.setIndexes(node.getIndexes());
+		leftSide.uniqueCounts(instance.getRecords(), attributeValue,0);
+		leftSide.calculateEntropy();
+		desicionTreeNode rightSide=new desicionTreeNode();
+		rightSide.setTargetAttribute(node.getTargetAttribute());
+		rightSide.setIndexes(node.getIndexes());
+		rightSide.uniqueCounts(instance.getRecords(), attributeValue,1);
+		rightSide.calculateEntropy();
+		node.setleftSideNode(leftSide);
+		node.setrightSideNode(rightSide);
+		node.calculateGain();
+		return node.getInfoGain();
+	}
+	
+	int getSize()
+	{
+		return size;
+	}
+	
+	desicionTreeNode getRoot()
+	{
+		return root;
+	}
+
+public static void main(String[] args) throws IOException
+{
+	int L= Integer.parseInt(args[0]);
+	int K=Integer.parseInt(args[1]);	
+	String training_set=args[2];
+	String validation_set=args[3];
+	String test_set=args[4];
+	String choice=args[5];
+
+	mainInstance trainingSet=new mainInstance(training_set);
+	decisionTree tree=new decisionTree(trainingSet);
+	mainInstance validationSet=new mainInstance(validation_set);
+	mainInstance testingSet=new mainInstance(test_set);		
+	double accuracy=(double) Math.round(tree.accuracy(testingSet)*10000)/100;
+	System.out.println("Accuracy of decision tree before pruning="+accuracy+"%");
+	decisionTree treeAfterPruning=tree.prune(L,K,validationSet);
+	accuracy=(double) Math.round(treeAfterPruning.accuracy(testingSet)*10000)/100;
+	System.out.println("Accuracy of decision tree after pruning ="+accuracy+"%");
+	if(choice.equals("yes"))
+	{		
+		System.out.println("-------------------------------");
+		System.out.println("-------DECISION TREE-----------");
+		System.out.println("-------------------------------");
+		treeAfterPruning.display(treeAfterPruning.getRoot(),-1);
+	}
+	}
+	double accuracy(mainInstance instances)
+	{
+		Iterator itr=instances.getRecords().entrySet().iterator();
+		HashMap<String,Integer> tempHash;
+		int nextCounter=0, total=0;
+		while(itr.hasNext())
+		{
+			Map.Entry entry=(Map.Entry) itr.next();
+			tempHash=new HashMap<String,Integer>((HashMap<String,Integer>)entry.getValue());
+			int predictedVal=predictValue(root,tempHash);
+			int actualVal=tempHash.get(root.getTargetAttribute());
+			if(predictedVal==actualVal)
+			{
+				nextCounter++;
+			}
+
+			total++;
+		}
+
+		return (double)nextCounter/total;
+	}
+
+
+	int predictValue(desicionTreeNode node, HashMap<String,Integer> tempHash)
+	{
+			if(node==null)
+			{
+				return -1;
+			}
+			if(node.getleftSideNode()==null && node.getrightSideNode()==null)
+			{
+				return node.getvalue();
+			}
+
+			if(tempHash.get(node.getclassify())==0)
+			{
+				if(node.getleftSideNode()!=null)
+				{
+					return predictValue(node.getleftSideNode(), tempHash);
+				}
+				
+			}
+
+			if(tempHash.get(node.getclassify())==1){
+
+				if(node.getrightSideNode()!=null){
+
+					return predictValue(node.getrightSideNode(), tempHash);
+				}
+	
+			}
+
+			return -1;
+	}
+
+		void initList()
+			{
+				nodeList=new LinkedList<desicionTreeNode>();
+			}
+
+	decisionTree prune(int L, int K, mainInstance instances)
+	{
+	decisionTree bestTree=new decisionTree(this);
+	double bestAccuracy=bestTree.accuracy(instances);
+	double accuracy=0;
+	for(int i=1;i<=L;i++)
+	{
+		decisionTree currentTree=new decisionTree(this);
+		Random randomValue=new Random();
+		int M=randomValue.nextInt(K)+1;
+
+		for(int j=1;j<=M;j++){
+
+			LinkedList<desicionTreeNode> list=new LinkedList<desicionTreeNode>();
+			
+			list.add(currentTree.getRoot());
+
+			currentTree.initList();
+
+			currentTree.levels(list);
+
+			int N=currentTree.nodeList.size();
+
+			Random randomValue1=new Random();
+			int P=randomValue1.nextInt(N);			
+			if(P==0)
+			{
+				continue;
+			}
+			if(!currentTree.nodeList.get(P).marked)
+			{
+				desicionTreeNode node=currentTree.nodeList.get(P);
+				desicionTreeNode newNode=new desicionTreeNode();
+				node.setmarked(true);
+				node.setleftSideNode(null);
+				node.setrightSideNode(null);				
+				node.setleftSideNode(newNode);
+				if(node.getCounts(0)>node.getCounts(1))
+				{
+					newNode.setvalue(0);
+				}
+				else
+				{
+					newNode.setvalue(1);
+				}
+			}
+			else
+			{
+				continue;
+			}
+		}
+		accuracy=currentTree.accuracy(instances);
+		if(accuracy>bestAccuracy)
+		{
+			bestAccuracy=accuracy;
+			bestTree=new decisionTree(currentTree);
+		}
+	}
+return bestTree;
+}
+void displayList()
+{
+	for(int i=0;i<nodeList.size();i++)
+	{
+		if(i==nodeList.size()-1)
+			System.out.print(nodeList.get(i).getCounts(0)+":"+nodeList.get(i).getCounts(1));
+		else	
+			System.out.print(nodeList.get(i).getCounts(0)+":"+nodeList.get(i).getCounts(1)+"->");
+	}
+	System.out.println(" ");
+}
+
+private static HashMap sortByValues(HashMap map)
+{
+       List list = new LinkedList(map.entrySet());
+       // Defined Custom Comparator here
+       Collections.sort(list, new Comparator() {
+            public int compare(Object o1, Object o2) {
+               return ((Comparable) ((Map.Entry) (o1)).getValue())
+                  .compareTo(((Map.Entry) (o2)).getValue());
+            }
+       });
+
+       HashMap sortedHashMap = new LinkedHashMap();
+       for (Iterator it = list.iterator(); it.hasNext();) {
+              Map.Entry entry = (Map.Entry) it.next();
+              sortedHashMap.put(entry.getKey(), entry.getValue());
+       } 
+       return sortedHashMap;
+  }
+
+
+	void levels(LinkedList<desicionTreeNode> list)
+	{
+		if(list.size()==0)
+		{
+			return;
+		}
+		LinkedList<desicionTreeNode> newList=new LinkedList<desicionTreeNode>();
+		for(int i=0;i<list.size();i++)
+		{
+			if(list.get(i).getleftSideNode()==null && list.get(i).getrightSideNode()==null)
+			{
+					continue;
+			}
+			else
+			{
+				if(list.get(i).getleftSideNode()!=null)
+				{
+					newList.addLast(list.get(i).getleftSideNode());
+				}				
+				if(list.get(i).getrightSideNode()!=null)
+				{
+					newList.addLast(list.get(i).getrightSideNode());
+				}
+				nodeList.addLast(list.get(i));
+			}
+		}
+		levels(newList);
+	}
+}
+class mainInstance
+{
+	HashMap<Integer,String> attributeNames;
+	int size;
+	HashMap<Integer,HashMap<String,Integer>> records;
+
+	mainInstance(){
+		attributeNames=new HashMap<Integer,String>();
+		records=new HashMap<Integer,HashMap<String,Integer>>();		
+		size=0;
+	}
+
+	HashMap<Integer,HashMap<String,Integer>> getRecords(){
+
+		return records;
+	}
+
+	HashMap<Integer,String> getAttributeNames(){
+
+		return attributeNames;
+	}
+
+	int getSize(){
+
+		return size;
+	}
+
+	mainInstance(String fileLocation) throws IOException{
+
+		BufferedReader reader=new BufferedReader(new FileReader(fileLocation));
+
+		size=0;
+		String line="";
+		int i=0;
+		attributeNames=new HashMap<Integer,String>();
+		records=new HashMap<Integer,HashMap<String,Integer>>();
+		boolean first=true;
+
+		while((line=reader.readLine())!=null && line.length()!=0){
+
+			if(first){
+				addAtrribute(line);
+				first=false;
+			}
+			else{
+				addRecordsToHashMap(line,i);
+				size++;
+				i++;
+			}
+
+		}
+
+		reader.close();
+
+	}
+
+	void addAtrribute(String line){
+
+		String[] array=splitCSVArray(line);
+
+		for(int i=0;i<array.length;i++){
+
+			attributeNames.put(i,array[i]);
+		}
+
+	}
+
+	void addRecordsToHashMap(String line,int row){
+
+		HashMap<String,Integer> attribute;
+		attribute=new HashMap<String,Integer>();
+
+		for(int j=0,i=0;i<attributeNames.size();j=j+2,i++){
+
+			attribute.put(attributeNames.get(i),Character.getNumericValue(line.charAt(j)));
+			//System.out.println(attributeNames[i]+" "+attribute.get(attributeNames[i]));
+
+		}
+
+		records.put(row,attribute);
+
+	}
+
+	void displayInstances(){
+
+		
+		System.out.println("Total No. of records="+records.size());
+		Iterator itr=records.entrySet().iterator();
+
+		while(itr.hasNext()){
+			Map.Entry pair=(Map.Entry) itr.next();
+			
+			System.out.println(pair.getKey()+":");
+
+			HashMap<String,Integer> innerMap;
+
+			innerMap=(HashMap<String,Integer>)pair.getValue();
+
+			Iterator innerItr=innerMap.entrySet().iterator();
+			
+			while(innerItr.hasNext()){
+
+				Map.Entry innerPair=(Map.Entry) innerItr.next();
+				System.out.print(innerPair.getKey()+":"+innerPair.getValue()+",");				
+
+			}
+			System.out.println(" ");				
+		}
+	}
+
+	String[] splitCSVArray(String line){
+
+		return line.split(",");
+
+	}
+}
